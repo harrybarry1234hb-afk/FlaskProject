@@ -1,0 +1,16 @@
+ body {
+    background-image: url("images/houseofcanada.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+    background-color: black;
+    color: white;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    color: orange;
+    margin-top: 100px;
+}
