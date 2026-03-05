@@ -1,40 +1,58 @@
 from flask import Flask, render_template, request
+import sqlite3
+import os
 
 app = Flask(__name__)
 
-# Home route
+# Create database if it doesn't exist
+def init_db():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS submissions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT
+    )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# About route
-@app.route("/about")
-def about():
-    return render_template("about.html")
 
-# Contact route
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
-    message = ""
     if request.method == "POST":
-        # Get form data
-        name = request.form.get("name")
-        email = request.form.get("email")
+        name = request.form["name"]
+        email = request.form["email"]
 
-        # Print to terminal
-        print(f"Form submitted -> Name: {name}, Email: {email}")
+        conn = sqlite3.connect("database.db")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO submissions (name,email) VALUES (?,?)", (name, email))
+        conn.commit()
+        conn.close()
 
-        # Save to file
-        with open("submissions.txt", "a") as f:
-            f.write(f"Name: {name}, Email: {email}\n")
+        return "Form submitted successfully!"
 
-        # Message to show on page
-        message = f"Thank you {name}! We received your email: {email}"
+    return render_template("contact.html")
 
-    return render_template("contact.html", message=message)
 
-import os
+@app.route("/admin")
+def admin():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM submissions")
+    data = cursor.fetchall()
+    conn.close()
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    return render_template("admin.html", data=data)
+
+
+port = int(os.environ.get("PORT", 10000))
+app.run(host="0.0.0.0", port=port)
